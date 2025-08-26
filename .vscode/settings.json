@@ -1,4 +1,6 @@
 {
+  "prettier.enable": false,
+  
   "stylelint.enable": true,
   "stylelint.validate": ["css", "scss"],
 
