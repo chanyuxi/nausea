@@ -4,7 +4,8 @@
   "description": "A practical front-end React component library for personal use",
   "scripts": {
     "build": "gulp build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:style": "stylelint \"**/*.{css,scss}\" --fix"
   },
   "keywords": [
     "react",
@@ -27,6 +28,12 @@
     "husky": "^9.1.7",
     "rimraf": "^6.0.1",
     "rollup": "^4.48.1",
+    "scss": "^0.2.4",
+    "stylelint": "^16.23.1",
+    "stylelint-config-recess-order": "^7.2.0",
+    "stylelint-config-standard-scss": "^15.0.1",
+    "stylelint-order": "^7.0.0",
+    "stylelint-scss": "^6.12.1",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1"
   }
