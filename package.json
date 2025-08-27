@@ -4,6 +4,8 @@
   "description": "A practical front-end React component library for personal use",
   "scripts": {
     "build": "gulp build",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
     "prepare": "husky",
     "lint:style": "stylelint \"**/*.{css,scss}\" --fix"
   },
@@ -19,14 +21,22 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/types": "^19.8.1",
     "@rollup/plugin-typescript": "^12.1.4",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/gulp": "^4.0.17",
     "@types/react": "^19.1.11",
+    "@vitejs/plugin-react": "^5.0.1",
+    "@vitest/coverage-v8": "3.2.4",
     "glob": "^11.0.3",
     "gulp": "^5.0.1",
     "gulp-cli": "^3.1.0",
     "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.1",
     "rimraf": "^6.0.1",
     "rollup": "^4.48.1",
+    "rollup-plugin-dts": "^6.2.3",
     "sass": "^1.91.0",
     "stylelint": "^16.23.1",
     "stylelint-config-recess-order": "^7.2.0",
@@ -34,6 +44,7 @@
     "stylelint-order": "^7.0.0",
     "stylelint-scss": "^6.12.1",
     "ts-node": "^10.9.2",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "vitest": "^3.2.4"
   }
 }
