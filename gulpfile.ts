@@ -11,6 +11,7 @@ import { glob } from 'glob'
 import type { Plugin, ModuleFormat } from 'rollup'
 import { rollup } from 'rollup'
 import typescript from '@rollup/plugin-typescript'
+import dts from 'rollup-plugin-dts'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 
@@ -85,6 +86,14 @@ async function buildImpl(input: Record<string, string>, format: ModuleFormat) {
 }
 
 async function buildDts(input: Record<string, string>) {
+	const bundle = await rollup({
+		input,
+		plugins: [dts()]
+	});
+	await bundle.write({
+		dir: `dist/types`,
+		format: 'es'
+	});
 }
 
 async function build(cb: TaskFunctionCallback) {
