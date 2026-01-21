@@ -41,3 +41,7 @@ export default function Button(props: PropsWithChildren<ButtonProps>) {
     </button>
   );
 }
+
+/**
+ * nausea-button nausea-button--primary nausea-button--disabled
+ */

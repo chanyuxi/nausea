@@ -1,1 +1,50 @@
-$primary: #000
+// stylelint-disable comment-empty-line-before, scss/dollar-variable-colon-space-after, scss/dollar-variable-empty-line-before
+
+// Nausea variables
+
+// All customizable values are defined here, you should override these variables.
+// We currently only provide low license configuration variables.
+// We will gradually update it.
+
+@use "functions" as funcs;
+
+$white:             #fff !default;
+$gray-100:          #f8f9fa !default;
+$gray-200:          #e9ecef !default;
+$gray-300:          #dee2e6 !default;
+$gray-400:          #ced4da !default;
+$gray-500:          #adb5bd !default;
+$gray-600:          #6c757d !default;
+$gray-700:          #495057 !default;
+$gray-800:          #343a40 !default;
+$gray-900:          #212529 !default;
+$black:             #000 !default;
+
+// Theme Colors
+$primary:           #007bff !default;
+$secondary:         #6c757d !default;
+$success:           #28a745 !default;
+$info:              #17a2b8 !default;
+$warning:           #ffc107 !default;
+$danger:            #dc3545 !default;
+$light:             #f8f9fa !default;
+$dark:              #212529 !default;
+
+$theme-colors: (
+"primary":          $primary,
+"secondary":        $secondary,
+"success":          $success,
+"info":             $info,
+"warning":          $warning,
+"danger":           $danger,
+"light":            $gray-100,
+"dark":             $gray-900
+) !default;
+
+// Prefixes
+$prefix:            nausea;
+$variable-prefix:   $prefix !default;
+
+// Button variables
+$button-padding-x:   0.75rem !default;
+$button-padding-y:   0.75rem !default;

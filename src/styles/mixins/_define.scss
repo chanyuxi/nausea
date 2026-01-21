@@ -1,0 +1,11 @@
+@use '../variables' as vars;
+
+@mixin css-variable($name, $value) {
+    --#{vars.$prefix}-#{$name}: #{$value};
+}
+
+@mixin css-variables($map) {
+    @each $name, $value in $map {
+        @include css-variable($name, $value);
+    }
+}

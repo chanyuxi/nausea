@@ -1,22 +1,22 @@
 # Introduction
 
-A practical front-end React component library for personal use
+A practical front-end React component library for personal use.
 
 # Usage
 
-firstly, install the library.
+Firstly, install the library.
 
 ```bash
 pnpm i @chanyuxi/nausea
 ```
 
-secondly, import the css file.
+Secondly, import the css file.
 
 ```scss
 @use '@chanyuxi/nausea/dist/styles/index.scss';
 ```
 
-then import the component you want to use.
+Then import the component you want to use.
 
 ```tsx
 import { Button } from '@chanyuxi/nausea'
@@ -30,7 +30,7 @@ export default function App() {
 
 # Development
 
-These plugins *(in vscode)* are helpful for development
+These plugins *(in vscode)* are helpful for development.
 
 - `ESLint`
 - `Stylelint`

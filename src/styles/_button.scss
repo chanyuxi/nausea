@@ -1,0 +1,14 @@
+@use 'variables' as vars;
+@use './mixins/define' as define;
+
+.#{vars.$prefix}-button {
+    @include define.css-variables((
+        'button-padding-x': vars.$button-padding-x,
+        'button-padding-y': vars.$button-padding-y,
+    ));
+
+    display: inline-block;
+    padding: var(--#{vars.$prefix}-button-padding-y) var(--#{vars.$prefix}-button-padding-x);
+    text-align: center;
+    user-select: none;
+}
