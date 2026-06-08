@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": true
+  },
+  "include": [
+    "config/**/*.ts",
+    "docs/**/*.ts",
+    "docs/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "*.config.ts"
+  ]
+}
