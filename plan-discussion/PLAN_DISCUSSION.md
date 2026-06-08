@@ -53,16 +53,17 @@
 - `@nausea/table` 保持无样式 headless，它是对 `@tanstack/react-table` 的二次增强。
 - `@nausea/data-view` 核心也保持 headless，不直接依赖 Tailwind，也不内置具体 DOM 样式。
 - 具体 UI 由 `theme` 提供，例如 `beautifulTheme`、`defaultTheme`。
-- `theme` 可以包含组件实现，例如 table 二次封装、search form、pagination、toolbar 等。
-- 搜索表单第一版使用受控表单模型，DataView 内部维护状态，对外通过 hook 暴露操纵能力。
-- 搜索表单实现建议使用 `react-hook-form`。你文中写的是 `react-form-hook`，如果没有特指其他库，后续按 npm 生态里的 `react-hook-form` 命名落地。
-- `api` 不做强类型约束，由用户在 config 中自行解释、转换或定义。
-- action column 保持高度自定义，确认弹窗、权限、隐藏、禁用等能力先不在第一版内置。
+- `theme` 是 UI runtime adapter，不只是颜色皮肤；它可以包含布局、组件实现、form/table theme slice 和 UI 库 Provider。
+- `beautifulTheme` 第一版作为独立入口导出，例如 `@nausea/data-view/themes/beautiful`。
+- 搜索表单第一版使用受控表单模型，`@nausea/form` 管理字段状态，DataView 管理提交后的查询状态，并对外通过 hook 暴露操纵能力。
+- 搜索表单实现由独立的 `@nausea/form` 承接；该包第一版内部自包含 `react-hook-form`。如果文中仍出现 `react-form-hook`，后续统一按 `react-hook-form` / `@nausea/form` 命名落地。
+- `api` 不做强类型约束，由用户在 config 中自行解释、转换或定义；暂不提供 `defineDataViewConfig<TApi>()`。
+- action column 放在 `@nausea/table` 的 helper 中，DataView 只消费 table 能力，不把 action 设计绑到 DataView。
 - 暂不提供 SSR 兼容策略。
 
 ## 3. 推荐包职责
 
-建议 monorepo 中保持三层职责。
+建议 monorepo 中保持四层职责。
 
 ### 3.1 `@nausea/table`
 
@@ -102,7 +103,26 @@
 - DataView 搜索表单布局。
 - Select UI 组件渲染。
 
-### 3.3 `@nausea/data-view`
+### 3.3 `@nausea/form`
+
+对象配置化表单包，承接 DataView 搜索表单与未来普通业务表单的共用能力。第一版内部自包含 `react-hook-form`，但包外主 API 不围绕 RHF 类型设计。
+
+负责：
+
+- object schema / field schema 定义与类型辅助。
+- 内部 form controller 创建与上下文。
+- submit / reset / watch / setValue / getValues 等表单操作。
+- field renderer registry 与插件扩展点。
+- value transform、空值清理、validation adapter。
+- `optionKey` / `options` 这类选项协议的接入点。
+
+不负责：
+
+- DataView query 触发、分页重置、请求编排。
+- 具体 UI 样式和 DOM 结构，除非由独立 theme 入口提供。
+- 后端请求语义。
+
+### 3.4 `@nausea/data-view`
 
 中后台列表页面组合层。
 
@@ -112,7 +132,7 @@
 - `defineDataViewConfig()` 类型辅助。
 - `DataViewConfigProvider` 注入全局配置。
 - `createDataViewHelper<T>()` 列定义辅助。
-- 搜索 schema 生成。
+- 从 columns / search 配置生成或转换 `@nausea/form` schema。
 - 请求协议与 query key 组织。
 - layout / theme / plugin 合并。
 - 插件生命周期。
@@ -124,10 +144,10 @@
 ```tsx
 // src/nausea-config.ts
 import { defineDataViewConfig } from '@nausea/data-view'
+import { beautifulTheme } from '@nausea/data-view/themes/beautiful'
 import { optionsDispatcherPlugin } from '@nausea/options-dispatcher-plugin'
 
 import { queryClient } from './libs/query-client'
-import { beautifulTheme } from './themes/beautiful-theme'
 
 export const dataViewConfig = defineDataViewConfig({
   queryClient,
@@ -186,7 +206,7 @@ function App() {
 - `defineDataViewConfig()` 主要负责类型提示，不应产生副作用。
 - `queryClient` 既可以从配置传入，也可以从 `useQueryClient()` 获取；如果二者都存在，需在开发环境校验是否一致。
 - 后续如果需要无 Provider 用法，可以再提供 `createDataView(config)`，但第一版优先 Provider。
-- `theme` 是具体 UI 实现入口；DataView core 不应该假设 theme 内部使用 Tailwind、nausea-ui、shadcn/ui 或其他 UI 库。
+- `theme` 是具体 UI 实现入口；DataView core 不应该假设 theme 内部使用 Tailwind、nausea-ui、Ant Design、shadcn/ui 或其他 UI 库。
 
 ## 5. DataView 使用草案
 
@@ -413,14 +433,16 @@ type DataViewSearchField<TSearch> =
 
 ## 9. Search Form 设计
 
-第一版搜索表单只做核心能力，但表单模型要明确：DataView 内部维护搜索表单状态，字段由表单控制器驱动，对外只暴露操纵 hook，不直接要求用户传入外部 state。
+第一版搜索表单只做核心能力，但表单模型要明确：`@nausea/form` 维护字段状态，DataView 维护提交后的查询状态，字段由表单控制器驱动，对外只暴露操纵 hook，不直接要求用户传入外部 state。
 
-推荐底层使用 `react-hook-form`：
+推荐通过 `@nausea/form` 承接表单能力，`@nausea/form` 第一版内部使用 `react-hook-form`：
 
-- DataView core 负责维护 search state 与 query 触发。
+- DataView core 负责把 columns / search 配置转换成 form schema，并维护已提交 search state 与 query 触发。
+- `@nausea/form` 负责创建 form controller、管理字段值、暴露 submit / reset / watch / setValue / getValues 等能力。
 - theme 负责把字段渲染成具体 UI，例如基于 nausea-ui 的 input、select、date range。
 - 用户通过 `useDataViewSearchForm()` 调用 `submit()`、`reset()`、`setValue()`、`getValues()` 等能力。
 - 搜索组件本身应是 controlled field，由 form controller 管理值与变更。
+- DataView 不直接依赖 RHF，theme 也不需要拥有搜索状态；如有高级场景，`@nausea/form` 可以提供 RHF escape hatch。
 
 必须支持：
 
@@ -498,48 +520,73 @@ interface DataViewSlots<TData, TSearch> {
 
 ## 11. Theme 设计
 
-`theme` 是 DataView 的具体 UI 实现集合。它可以包含布局、内部组件、搜索字段渲染器、cell 渲染器以及 className 约定。
+`theme` 是 DataView 的 UI runtime adapter。它不只是换颜色的皮肤，而是把 headless 状态和渲染协议适配到某套具体 UI 实现上。
 
 这比 `preset` 更准确：`preset` 更像静态默认值，而当前设想里的 `beautifulTheme` / `defaultTheme` 会真正提供组件实现。
 
 ```ts
 interface DataViewTheme {
   name: string
+  Provider?: React.ComponentType<{ children: React.ReactNode }>
   layout?: DataViewLayout<any, any>
   components?: Partial<DataViewComponents>
-  searchRenderers?: Record<string, DataViewSearchRenderer>
-  cellFormatters?: Record<string, DataViewCellFormatter<any, any>>
-  cellRenderers?: Record<string, DataViewCellRenderer<any, any>>
+
+  form?: FormTheme
+  table?: TableTheme
+
   classNames?: Partial<DataViewClassNames>
 }
 ```
 
-组件实现可以由 theme 提供：
+DataView 的最小组件协议只定义列表页区域，不重新定义 form field 或 table cell 的底层协议：
 
 ```ts
 interface DataViewComponents {
   Root: React.ComponentType<DataViewRootProps>
   Header: React.ComponentType<DataViewHeaderProps>
-  SearchForm: React.ComponentType<DataViewSearchFormProps>
+  SearchRegion: React.ComponentType<DataViewSearchRegionProps>
   Toolbar: React.ComponentType<DataViewToolbarProps>
-  Table: React.ComponentType<DataViewTableProps>
+  Content: React.ComponentType<DataViewContentProps>
   Pagination: React.ComponentType<DataViewPaginationProps>
+  Footer: React.ComponentType<DataViewFooterProps>
   Empty: React.ComponentType<DataViewEmptyProps>
   Error: React.ComponentType<DataViewErrorProps>
 }
 ```
 
+样式统一不由 DataView 集中管理所有细节，而是由同一个 theme 入口组合三个 slice：
+
+```ts
+interface NauseaThemeBundle {
+  name: string
+  design?: NauseaDesignTokens
+  form: FormTheme
+  table: TableTheme
+  dataView: DataViewTheme
+}
+```
+
+`DataViewTheme` 可以引用 `form` 和 `table` slice；单独使用 `@nausea/form` 或 `@nausea/table` 时，也可以直接使用同一套 slice。这样视觉统一来自共享的 design tokens / recipes / primitives，而不是来自 DataView 对所有组件的集中控制。
+
 推荐拆分：
 
 - `@nausea/data-view`：headless core、类型、hooks、状态组织。
 - `@nausea/data-view/themes/default`：默认 theme，可以很轻，只提供基础结构。
-- `@nausea/data-view/themes/beautiful`：更完整的 theme，可以结合 `nausea-ui` 与 `react-hook-form`。
+- `@nausea/data-view/themes/beautiful`：独立入口导出的完整 theme，可以结合 `nausea-ui`、`@nausea/form` 与 `@nausea/table` 的渲染协议。
+- 后续可以提供 `@nausea/data-view/themes/antd` 这类 UI 库适配入口。
 
 可行性判断：
 
 - 这个方向是可行的，而且比在 DataView core 内写死 Tailwind 或 UI 库更稳。
-- 风险是 theme 需要实现的组件协议会变复杂，因此第一版要把 `DataViewComponents` 控制得很小。
+- 风险是 theme 需要实现的组件协议会变复杂，因此第一版要把 `DataViewComponents` 控制在区域级组件，不下探到 field / cell 级别。
 - `theme` 不应接管请求和业务状态，只接管渲染实现；请求、分页、搜索值仍由 core 管理。
+
+UI 库兼容策略：
+
+- DataView core 不直接导入 `nausea-ui`、Ant Design、Element UI、shadcn/ui 或其他 UI 库。
+- AntD 这类 React UI 库可以通过 theme adapter 兼容，例如用 AntD `Input` / `Select` / `DatePicker.RangePicker` 渲染 form field，用 AntD `Button` / `Dropdown` / `Pagination` 渲染工具栏、action column 和分页。
+- 即使使用 AntD，也不要让 AntD Form 或 AntD Table 接管核心状态；`@nausea/form` 仍管理字段状态，`@nausea/table` / DataView 仍管理表格、分页、排序和请求状态。AntD 组件只是 renderer。
+- Vue 生态的 Element UI / Element Plus 不能直接作为当前 React 版 DataView 的 theme，除非使用 React wrapper、Web Components，或未来单独提供 Vue renderer。
 
 优先级：
 
@@ -617,7 +664,7 @@ interface DataViewActions {
 状态边界：
 
 - DataView 自己管理分页、排序等页面状态。
-- 搜索表单由 DataView 内部创建的 form controller 管理，第一版建议基于 `react-hook-form`。
+- 搜索表单由 `@nausea/form` 创建的 form controller 管理；DataView 负责提交后的查询状态、分页重置和请求触发。
 - React Query 管理请求、缓存和刷新。
 - TanStack Table 管理表格行模型、列模型和选择状态。
 - OptionsDispatcher 管理 options 数据源。
@@ -642,7 +689,7 @@ interface DataViewActions {
 - 支持 columns / data / loading / empty。
 - 支持 cell fallback。
 - 支持 className / align / width 等 column meta 透传。
-- 支持 action column。
+- 在 `@nausea/table` helper 中支持 action column，保证 table 独立使用时也能复用该能力。
 - 不绑定具体 DOM 样式，只提供必要的状态、类型、渲染入口和 meta 透传。
 
 验收：
@@ -667,7 +714,7 @@ interface DataViewActions {
 ### Phase 4: Search Form
 
 - 从 columns 收集 search fields。
-- 建立基于 `react-hook-form` 的内部 form controller。
+- 建立基于 `@nausea/form` 的搜索 form controller，RHF 作为 `@nausea/form` 的内部实现细节。
 - 实现 input / select / dateRange 的基础 renderer。
 - submit / reset。
 - 对外提供 `useDataViewSearchForm()` 操作 hook。
@@ -694,10 +741,12 @@ interface DataViewActions {
 ### Phase 6: Theme 与 Layout
 
 - 提供默认 theme。
+- 提供独立入口导出的 `beautifulTheme`。
 - 支持 `layout(ctx)` 覆盖整体结构。
 - 支持 `slots`。
 - 支持 `components` 覆盖内部组件。
-- 明确 `theme.components` 的最小协议。
+- 明确 `theme.components` 只覆盖 DataView 区域级组件；form field 和 table cell 由 `form` / `table` theme slice 管理。
+- 明确 AntD 等 UI 库通过 theme adapter 兼容，core 不直接依赖具体 UI 库。
 
 验收：
 
@@ -727,7 +776,7 @@ interface DataViewActions {
 - 无限滚动。
 - 内置权限系统。
 - 内置 action 确认弹窗、权限、隐藏、禁用规则。
-- 内置具体 UI 框架，如 Ant Design、shadcn/ui。
+- 在 core 内置具体 UI 框架，如 Ant Design、shadcn/ui。
 - SSR 兼容策略。
 
 ## 16. 已确认答复与剩余开放问题
@@ -737,31 +786,34 @@ interface DataViewActions {
 - `@nausea/table` 保持无样式 headless。
 - `@nausea/data-view` core 保持无样式 headless。
 - `preset` 改名为 `theme`，例如 `beautifulTheme`、`defaultTheme`。
-- `theme` 可以包含 table、searchForm、pagination 等具体组件实现。
+- `theme` 是 UI runtime adapter，可以包含布局、区域组件、form/table theme slice 和 UI 库 Provider。
+- `beautifulTheme` 第一版作为独立入口导出。
 - `api` 不做类型和语义约束，由用户在 config 中自行解释。
-- 搜索表单由内部 form controller 管理，对外暴露 hook 操作。
+- `api` 如果保持 `unknown`，暂不提供 `defineDataViewConfig<TApi>()`，避免增加类型参数负担。
+- 引入 `@nausea/form` 承接对象配置化表单能力；该包内部自包含 RHF，DataView 不直接依赖 `react-hook-form`。
+- 搜索表单由 `@nausea/form` 创建的 form controller 管理，对外通过 DataView hook 暴露操作。
+- action column 放在 `@nausea/table` 的 helper 中，保证 table 独立使用时也能支持 action。
 - action column 第一版只保留高度自定义入口，不内置确认、权限、隐藏、禁用规则。
+- DataView core 不直接依赖具体 UI 库；AntD 等 React UI 库通过 theme adapter 兼容，Vue 生态 Element UI 需要 React wrapper、Web Components 或单独 Vue renderer。
 - 暂不考虑 SSR。
 
 剩余开放：
 
-- `theme.components` 的最小组件协议如何定义，才能既强大又不笨重？
-- `beautifulTheme` 是否作为独立入口导出，还是作为独立包发布？
-- `@nausea/data-view` 是否要依赖 `react-hook-form`，还是让使用搜索表单的 theme 依赖它？
-- action column 是放在 `@nausea/table` 的 helper 中，还是作为 DataView column helper 的能力？
-- `api` 如果是 `unknown`，是否需要提供 `defineDataViewConfig<TApi>()` 来增强用户侧类型？
+- 暂无；后续随实现推进继续补充。
 
 ## 17. 当前推荐结论
 
 第一版最稳妥的路线：
 
-1. 先把 `@nausea/table` 做成可靠的底层表格。
-2. 再让 `@nausea/data-view` 组合 table、query、search、layout。
-3. `OptionsDispatcher` 作为 options 注册层，不和 DataView 强绑定，通过 plugin 集成。
-4. `defineDataViewConfig()` 只做类型辅助，配置通过 Provider 注入。
-5. 避免使用 React 特殊 prop `key`，改用 `resourceKey`。
-6. 使用 `theme` 承载具体 UI 实现，DataView core 保持 headless。
-7. 搜索表单内部使用 form controller，对外通过 hook 操作。
-8. 先定义明确 slots，再把极少数特殊场景留给 `slots.custom`。
+1. 先把 `@nausea/table` 做成可靠的底层表格，并在 table helper 中提供 action column。
+2. 引入 `@nausea/form` 承接对象配置化表单、form controller、字段渲染协议与 RHF 封装。
+3. 再让 `@nausea/data-view` 组合 table、query、search、layout，并把 search 配置转换为 `@nausea/form` schema。
+4. `OptionsDispatcher` 作为 options 注册层，不和 DataView 强绑定，通过 plugin 或 form 字段协议集成。
+5. `defineDataViewConfig()` 只做类型辅助，配置通过 Provider 注入；暂不增加 `TApi` 泛型。
+6. 避免使用 React 特殊 prop `key`，改用 `resourceKey`。
+7. 使用 `theme` 承载具体 UI 实现，DataView core 保持 headless；`beautifulTheme` 作为独立入口导出。
+8. DataViewTheme 只定义列表页区域级组件，form field 和 table cell 交给对应 theme slice。
+9. 搜索表单由 `@nausea/form` 的 form controller 管理，对外通过 DataView hook 操作。
+10. 先定义明确 slots，再把极少数特殊场景留给 `slots.custom`。
 
 这样 DataView 会保持一个清晰边界：它是后台列表页状态与渲染协议的组合器，而不是新的状态管理库，也不是强 UI 框架。

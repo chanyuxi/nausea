@@ -1,0 +1,36 @@
+{
+  "name": "@nausea/data-view",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./themes/default": {
+      "types": "./dist/themes/default/index.d.ts",
+      "import": "./dist/themes/default/index.js",
+      "default": "./dist/themes/default/index.js"
+    },
+    "./themes/beautiful": {
+      "types": "./dist/themes/beautiful/index.d.ts",
+      "import": "./dist/themes/beautiful/index.js",
+      "default": "./dist/themes/beautiful/index.js"
+    },
+    "./themes/antd": {
+      "types": "./dist/themes/antd/index.d.ts",
+      "import": "./dist/themes/antd/index.js",
+      "default": "./dist/themes/antd/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ]
+}
