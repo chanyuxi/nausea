@@ -1,7 +1,0 @@
-@use 'variables' as vars;
-
-:root {
-    @each $name, $value in vars.$theme-colors {
-        --#{vars.$prefix}-#{$name}: #{$value};
-    }
-}
