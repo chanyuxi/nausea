@@ -21,16 +21,21 @@
       "types": "./dist/themes/beautiful/index.d.ts",
       "import": "./dist/themes/beautiful/index.js",
       "default": "./dist/themes/beautiful/index.js"
-    },
-    "./themes/antd": {
-      "types": "./dist/themes/antd/index.d.ts",
-      "import": "./dist/themes/antd/index.js",
-      "default": "./dist/themes/antd/index.js"
     }
   },
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "src"
-  ]
+  ],
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.101.0",
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.101.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  }
 }
