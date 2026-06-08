@@ -21,11 +21,20 @@ const isExternal = (id: string) => !id.startsWith('.') && !path.isAbsolute(id)
 const configs = packageDirs.flatMap((packageName): RollupOptions[] => {
   const packageDir = path.join(packagesDir, packageName)
   const input = path.join(packageDir, 'src/index.ts')
+  const isEmptyOptionsDispatcherLog = (code?: string, message?: string) =>
+    packageName === 'options-dispatcher' &&
+    (code === 'EMPTY_BUNDLE' ||
+      code === 'EMPTY_CHUNK' ||
+      message?.includes('Generated an empty chunk'))
+  const onLog: RollupOptions['onLog'] = (level, log, handler) => {
+    if (isEmptyOptionsDispatcherLog(log.code, log.message)) {
+      return
+    }
+
+    handler(level, log)
+  }
   const onwarn: RollupOptions['onwarn'] = (warning, warn) => {
-    if (
-      packageName === 'options-dispatcher' &&
-      warning.code === 'EMPTY_BUNDLE'
-    ) {
+    if (isEmptyOptionsDispatcherLog(warning.code, warning.message)) {
       return
     }
 
@@ -35,6 +44,7 @@ const configs = packageDirs.flatMap((packageName): RollupOptions[] => {
   return [
     {
       input,
+      onLog,
       onwarn,
       external: isExternal,
       plugins: [
@@ -52,6 +62,7 @@ const configs = packageDirs.flatMap((packageName): RollupOptions[] => {
     },
     {
       input,
+      onLog,
       onwarn,
       external: isExternal,
       plugins: [dts({ tsconfig })],
